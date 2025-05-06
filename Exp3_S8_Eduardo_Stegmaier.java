@@ -2,7 +2,7 @@ import java.util.InputMismatchException;
 import java.util.Scanner;
 import java.util.ArrayList;
 
-public class TeatroMoro {
+public class Exp3_S8_Eduardo_Stegmaier {
 
     //Crear Arreglos
 
@@ -14,8 +14,8 @@ public class TeatroMoro {
             {0, 0, 0, 0, 0, 0, 0, 0, 0, 0} // General
     };
     
-    public static int[][] venta_cliente = new int[6][40];
-    public static int venta_cliente_lenght = 40; // longitud y ancho de la matriz al ser fija
+    public static int[][] venta_cliente = new int[6][41];
+    public static int venta_cliente_lenght = 41; // longitud y ancho de la matriz al ser fija
     public static int venta_cliente_width = 6; 
   
     // crear Arraylist
@@ -37,7 +37,7 @@ public class TeatroMoro {
     public static final int[] arreglo_precios = {20000, 15000, 12000, 10000};
 
 
-    //Variavles Estaticas
+    //Variables Estaticas
     public static int opcion; // variable para opciones del menu principal
     public static int id_venta = 0; 
     public static int id_cliente = 1; 
@@ -92,7 +92,7 @@ public class TeatroMoro {
                         if (encontrado == 1) {
                             System.out.println("Venta editada con éxito.");
                         } else if (encontrado == 0) {
-                            System.out.println("No se encontró la venta con ID: " + id_venta);
+                            System.out.println("No se encontró la venta con este ID");
                         }
                         
 
@@ -104,7 +104,7 @@ public class TeatroMoro {
                         if (encontrado == 1) {
                             System.out.println("Venta eliminada con éxito.");
                         } else if (encontrado == 0) {
-                            System.out.println("No se encontró la venta con ID: " + id_venta);
+                            System.out.println("No se encontró la venta con este ID");
                         }
                     }
                     salir(scanner);
@@ -195,7 +195,6 @@ public class TeatroMoro {
 
         //Elegir y reservar asiento
         
-        boolean reservado=false;
         int n_reservas;
         int precio_final;
         boolean salir = false;
@@ -206,24 +205,23 @@ public class TeatroMoro {
                 ubicacion = validacion(scanner, 1, 4);
                 System.out.println("Ingrese el número del asiento (1-10): ");
                 asiento = validacion(scanner, 1, 10);
-
-                
-                reservado = lista_reservas.stream()                                                                     //(ARREGLAR)
+            
+                // Verificar si el asiento está disponible en matriz_entrada (no comprado)
+                boolean comprado = matriz_entrada[ubicacion - 1][asiento - 1] == 1;
+            
+                // Verificar si el asiento ya está reservado en lista_reservas
+                boolean reservado = lista_reservas.stream()
                     .anyMatch(arreglo_reserva -> arreglo_reserva[0] == ubicacion && arreglo_reserva[1] == asiento);
-
-                // Verificar si el asiento está disponible antes de la reserva
-                if (matriz_entrada[ubicacion-1][asiento-1] == 0 && !reservado) {
-
+            
+                if (!comprado && !reservado) {
                     System.out.println("Asiento Disponible.\n");
-
-                    salir=true; // Salir del bucle si la reserva es exitosa
-                }else if (matriz_entrada[ubicacion-1][asiento-1] == 1) {
+                    salir = true; // Salir del bucle si la reserva es válida
+                } else if (comprado) {
                     System.out.println("El asiento ya está comprado. Por favor, elija otro.\n");
-                }else if (reservado) {
-                    System.out.println("El asiento ya está reservado. Por favor, elija otro.\n");
+                } else if (reservado) {
+                    System.out.println("El asiento ya está reservado en esta transacción. Por favor, elija otro.\n");
                 }
-
-            }while (!salir);   
+            } while (!salir);  
 
             //Ingresar edad
             System.out.println("Ingrese su edad:  \n");
@@ -370,6 +368,11 @@ public class TeatroMoro {
             for (int i = 0; i < venta_cliente_lenght; i++) {
                 if (venta_cliente[1][i] == id) {
 
+                    int ubicacion = venta_cliente[2][i];
+                    int asiento = venta_cliente[3][i];
+                    //Eliminar de la matriz_entrada
+                    matriz_entrada[ubicacion-1][asiento-1] = 0;
+
                     // Eliminar la venta del arreglo venta_cliente
                     for (int j = i; j < venta_cliente_lenght; j++) {
                         if (j<venta_cliente_lenght-1) {
@@ -382,13 +385,10 @@ public class TeatroMoro {
                             }
                         }
                     }
-                    //Eliminar de la matriz_entrada
-                    matriz_entrada[venta_cliente[2][i]-1][venta_cliente[3][i]-1] = 0; // Marcar el asiento como libre
                 }
             }
-            //System.out.println("Venta eliminada con éxito.");
-        }
-            
+            //"Venta eliminada con éxito."
+        } 
     }
 
     //Metodo para cambiar asientos
@@ -411,25 +411,32 @@ public class TeatroMoro {
 
             }while(!disponible);
             
+
+            
             //Ingresar edad
             System.out.println("Ingrese su edad:  \n");
             int edad = validacion(scanner, 1, 100);
     
             // calcular descuento / precio base y precio final                   
             double descuento = (edad < 18 ? descuentos_promociones.get(0) : (edad >= 60 ? descuentos_promociones.get(1) : 0));      //(CAMBIAR)
-            int precio_base = arreglo_precios[ubicacion - 1];
+            int precio_base = arreglo_precios[nueva_ubicacion - 1];
             int precio_final = (int) (precio_base * (1 - descuento));
 
             for (int i = 0; i < venta_cliente_lenght; i++) {
-                if (venta_cliente[1][i] == id_venta) {
+                if (venta_cliente[1][i] == id) {    
+                    matriz_entrada[venta_cliente[2][i]-1][venta_cliente[3][i]-1] = 0;
+
+                }
+                if (venta_cliente[1][i] == id) {
                     // Cambiar la ubicación y el asiento
-                    venta_cliente[i][2] = nueva_ubicacion;
-                    venta_cliente[i][3] = nuevo_asiento;
-                    venta_cliente[i][4] = precio_final; 
-                    venta_cliente[i][5] = edad; // Actualizar la edad
+                    venta_cliente[2][i] = nueva_ubicacion;
+                    venta_cliente[3][i] = nuevo_asiento;
+                    venta_cliente[4][i] = precio_final; 
+                    venta_cliente[5][i] = edad; // Actualizar la edad
                     break;
                 }
             }
+            matriz_entrada[nueva_ubicacion-1][nuevo_asiento-1] = 1;
 
         }
 
